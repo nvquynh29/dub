@@ -22,12 +22,6 @@ export const GET = withWorkspace(
     let { eventType: oldEvent, endpoint: oldType } =
       analyticsPathParamsSchema.parse(params);
 
-    // for backwards compatibility (we used to support /analytics/[endpoint] as well)
-    if (!oldType && oldEvent && VALID_ANALYTICS_ENDPOINTS.includes(oldEvent)) {
-      oldType = oldEvent;
-      oldEvent = undefined;
-    }
-
     const parsedParams = analyticsQuerySchema.parse(searchParams);
 
     let {
@@ -43,10 +37,17 @@ export const GET = withWorkspace(
       folderId,
     } = parsedParams;
 
+    // for backwards compatibility (we used to support /analytics/[endpoint] as well)
+    if (!oldType && oldEvent && VALID_ANALYTICS_ENDPOINTS.includes(oldEvent as typeof VALID_ANALYTICS_ENDPOINTS[number])) {
+      oldType = oldEvent;
+      oldEvent = undefined;
+    }
+
     let link: Link | null = null;
 
-    event = oldEvent || event;
-    groupBy = oldType || groupBy;
+    // Type assertions to match the expected types from analyticsQuerySchema
+    event = (oldEvent as (typeof event)) || event;
+    groupBy = (oldType as (typeof groupBy)) || groupBy;
 
     if (domain) {
       await getDomainOrThrow({ workspace, domain });
